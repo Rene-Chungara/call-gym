@@ -92,26 +92,30 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 
+// CALLBACKS DE PAGOFÁCIL (SIN AUTENTICACIÓN - Para que PagoFácil pueda enviar notificaciones)
+Route::post('/pagos/pagofacil/callback', [PagoController::class, 'callbackPagoFacil'])
+    ->name('pagos.pagofacil.callback')
+    ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class]);
+
+Route::post('/cuotas-pago/pagofacil/callback', [CuotaPagoController::class, 'callbackPagoFacil'])
+    ->name('cuotas-pago.pagofacil.callback')
+    ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class]);
+
+// PagoFácil - Consultas (requieren autenticación pero NO Inertia)
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::post('/pagos/pagofacil/consultar', [PagoController::class, 'consultarEstadoPagoFacil'])
+        ->name('pagos.pagofacil.consultar')
+        ->withoutMiddleware([\App\Http\Middleware\HandleInertiaRequests::class]);
+
+    Route::post('/cuotas-pago/pagofacil/consultar', [CuotaPagoController::class, 'consultarEstadoPagoFacil'])
+        ->name('cuotas-pago.pagofacil.consultar')
+        ->withoutMiddleware([\App\Http\Middleware\HandleInertiaRequests::class]);
+});
+
 // PAGOS CON STRIPE (fuera de Inertia para evitar CORS)
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/cuotas-pago/{cuotaPago}/pagar-tarjeta', [CuotaPagoController::class, 'store'])->name('cuotas-pago.store-card')->withoutMiddleware(\App\Http\Middleware\HandleInertiaRequests::class);
     Route::post('/pagos/pagar-tarjeta', [PagoController::class, 'store'])->name('pagos.store-card')->withoutMiddleware(\App\Http\Middleware\HandleInertiaRequests::class);
-
-    // PagoFácil - Suscripciones
-    Route::post('/pagos/pagofacil/callback', [PagoController::class, 'callbackPagoFacil'])
-        ->name('pagos.pagofacil.callback')
-        ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class]);
-
-    Route::post('/pagos/pagofacil/consultar', [PagoController::class, 'consultarEstadoPagoFacil'])
-        ->name('pagos.pagofacil.consultar');
-
-    // PagoFácil - Cuotas
-    Route::post('/cuotas-pago/pagofacil/callback', [CuotaPagoController::class, 'callbackPagoFacil'])
-        ->name('cuotas-pago.pagofacil.callback')
-        ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class]);
-
-    Route::post('/cuotas-pago/pagofacil/consultar', [CuotaPagoController::class, 'consultarEstadoPagoFacil'])
-        ->name('cuotas-pago.pagofacil.consultar');
 });
 
 // PAGOS CON STRIPE

@@ -128,13 +128,6 @@ class PagoController extends Controller
 
         // Efectivo
         try {
-            // Crear registro de pago (si tienes una tabla de pagos al contado, o usar la lógica que tengas)
-            // Revisando Suscripciones/Show.vue, parece que usa una relación 'pagos'.
-            // Asumiré que existe un modelo Pago asociado a la suscripción.
-
-            // Nota: En el código original de SuscripcionController, al crear suscripción contado, se creaba un Pago.
-            // Aquí estamos pagando una suscripción pendiente.
-
             Pago::create([
                 'suscripcion_id' => $suscripcion->id,
                 'monto_abonado' => $validated['monto_pagado'],
@@ -145,10 +138,6 @@ class PagoController extends Controller
                 'estado_pago' => true,
             ]);
 
-            // Recalcular estado
-            // Nota: obtenerMontoPendiente usa la relación pagos, necesitamos refrescarla o sumar manualmente
-            // Como acabamos de crear el pago, al llamar de nuevo a obtenerMontoPendiente (si refrescamos) debería estar actualizado.
-            // Pero para ser eficientes:
             $nuevoPendiente = $montoPendiente - $validated['monto_pagado'];
 
             // Actualizar estado de la suscripción
@@ -423,95 +412,142 @@ class PagoController extends Controller
         return 'pendiente';
     }
 
+    /**
+     * Consultar estado de pago en PagoFácil
+     * Usando lógica del ejemplo que funciona
+     */
     public function consultarEstadoPagoFacil(Request $request, \App\Services\PagoFacilService $service)
     {
-        $request->validate([
-            'transactionId' => 'required',
-            'pagoId' => 'required|exists:pagos,id',
-            'suscripcionId' => 'required|exists:suscripcion,id',
-        ]);
+        set_time_limit(120);
 
         try {
-            $statusData = $service->consultarTransaccion($request->transactionId);
-            Log::info('Consulta Manual PagoFacil', ['data' => $statusData]);
+            $transactionId = $request->transactionId;
+            $pagoId = $request->pagoId;
+            $suscripcionId = $request->suscripcionId;
 
-            $pago = Pago::find($request->pagoId);
-            if ($pago->estado_pago) {
-                return redirect()->route('suscripciones.show', $request->suscripcionId)->with('success', 'Pago confirmado.');
+            if (!$transactionId) {
+                return response()->json(['success' => false, 'message' => 'Transaction ID es requerido'], 400);
             }
 
-            // Verificar respuesta API según documentación v2
-            if ($statusData && isset($statusData['values'])) {
-                $values = $statusData['values'];
-                $paymentTime = $values['paymentTime'] ?? null;
-                $paymentDate = $values['paymentDate'] ?? null;
-                $paymentStatus = $values['paymentStatus'] ?? null;
+            $pago = Pago::find($pagoId);
+            if ($pago->estado_pago) {
+                return response()->json([
+                    'success' => true,
+                    'paid' => true,
+                    'redirect' => route('suscripciones.show', $suscripcionId)
+                ]);
+            }
 
-                Log::info('Estado de pago desde PagoFácil', [
-                    'paymentTime' => $paymentTime,
-                    'paymentDate' => $paymentDate,
-                    'paymentStatus' => $paymentStatus,
-                    'all_values' => $values
+            // Obtener token
+            try {
+                $tokenResponse = $service->obtenerToken();
+            } catch (\Exception $e) {
+                Log::error('Fallo al obtener token en consultarEstado', ['error' => $e->getMessage()]);
+                return response()->json(['success' => false, 'message' => 'Error de conexión con pasarela'], 500);
+            }
+
+            if (!isset($tokenResponse['values']['accessToken'])) {
+                return response()->json(['success' => false, 'message' => 'No se pudo autenticar con PagoFácil'], 500);
+            }
+
+            $accessToken = $tokenResponse['values']['accessToken'];
+            $client = new \GuzzleHttp\Client();
+
+            // Realizar la petición
+            $response = $client->post(config('pagofacil.base_url') . '/query-transaction', [
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Authorization' => 'Bearer ' . $accessToken
+                ],
+                'json' => [
+                    'pagofacilTransactionId' => (int) $transactionId
+                ],
+                'http_errors' => false,
+                'timeout' => 90,
+                'connect_timeout' => 10
+            ]);
+
+            $responseContent = $response->getBody()->getContents();
+            $result = json_decode($responseContent, true);
+
+            Log::info('Respuesta cruda consultarEstado', ['content' => $result]);
+
+            // Validar JSON
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                return response()->json(['success' => false, 'message' => 'Respuesta inválida del proveedor'], 500);
+            }
+
+            // Validar errores de la API
+            if (isset($result['error']) && $result['error'] != 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $result['message'] ?? 'Error en la transacción'
+                ], 400);
+            }
+
+            if (!isset($result['values'])) {
+                return response()->json(['success' => false, 'message' => 'Datos no encontrados'], 404);
+            }
+
+            $values = $result['values'];
+            $paymentStatus = $values['paymentStatus'] ?? null;
+            $paymentDate = $values['paymentDate'] ?? null;
+            $paymentTime = $values['paymentTime'] ?? null;
+
+            Log::info('Estado de pago desde PagoFácil', [
+                'paymentStatus' => $paymentStatus,
+                'paymentDate' => $paymentDate,
+                'paymentTime' => $paymentTime,
+                'all_values' => $values
+            ]);
+
+            // Solo confirmar si paymentStatus es 2 (completado)
+            if ($paymentStatus === 2) {
+                $pago->update([
+                    'estado_pago' => true,
+                    'fecha_abono' => now(),
+                    'observaciones' => 'Pago QR verificado. Status: ' . $paymentStatus . ' | Fecha: ' . $paymentDate . ' ' . $paymentTime,
                 ]);
 
-                // IMPORTANTE: Solo confirmar si el pago está REALMENTE completado
-                // paymentStatus según documentación:
-                // 0 = Pendiente
-                // 1 = Iniciado
-                // 2 = Completado/Pagado
-                // 3 = Rechazado/Cancelado
+                $suscripcion = Suscripcion::find($suscripcionId);
+                $this->actualizarEstadoSuscripcion($suscripcion);
 
-                // Solo confirmar si paymentStatus es 2 (completado)
-                // Y además tiene fecha y hora de pago (doble verificación)
-                $estadoCompletado = ($paymentStatus === 2);
-                $tieneFechaHoraPago = (
-                    !empty($paymentTime) &&
-                    !empty($paymentDate) &&
-                    $paymentTime !== null &&
-                    $paymentDate !== null &&
-                    $paymentTime !== '0000-00-00 00:00:00' &&
-                    $paymentDate !== '0000-00-00'
-                );
+                Log::info('Pago actualizado como completado', [
+                    'pago_id' => $pago->id,
+                    'transaction_id' => $transactionId,
+                    'payment_status' => $paymentStatus
+                ]);
 
-                // Solo actualizar si AMBAS condiciones se cumplen
-                if ($estadoCompletado && $tieneFechaHoraPago) {
-                    $pago->update([
-                        'estado_pago' => true,
-                        'fecha_abono' => now(),
-                        'observaciones' => 'Pago QR verificado. Status: ' . $paymentStatus . ' | Fecha: ' . $paymentDate . ' ' . $paymentTime,
-                    ]);
-
-                    $suscripcion = Suscripcion::find($request->suscripcionId);
-                    $this->actualizarEstadoSuscripcion($suscripcion);
-
-                    Log::info('Pago actualizado como completado desde consultarEstadoPagoFacil', [
-                        'pago_id' => $pago->id,
-                        'transaction_id' => $request->transactionId,
-                        'payment_status' => $paymentStatus,
-                        'payment_date' => $paymentDate,
-                        'payment_time' => $paymentTime
-                    ]);
-
-                    return redirect()->route('suscripciones.show', $request->suscripcionId)->with('success', 'Pago confirmado exitosamente.');
-                } else {
-                    // Log para debugging
-                    Log::info('Pago aún no completado', [
-                        'pago_id' => $pago->id,
-                        'estadoCompletado' => $estadoCompletado,
-                        'tieneFechaHoraPago' => $tieneFechaHoraPago,
-                        'paymentStatus' => $paymentStatus,
-                        'paymentDate' => $paymentDate,
-                        'paymentTime' => $paymentTime
-                    ]);
-                }
+                return response()->json([
+                    'success' => true,
+                    'paid' => true,
+                    'redirect' => route('suscripciones.show', $suscripcionId)
+                ]);
             }
 
-            // Devolver respuesta vacía con código 204 (No Content) para que Inertia no haga nada
-            return response('', 204);
+            // Pago aún pendiente
+            Log::info('Pago aún no completado', [
+                'pago_id' => $pago->id,
+                'paymentStatus' => $paymentStatus
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'paid' => false,
+                'data' => [
+                    'paymentStatus' => $paymentStatus,
+                    'paymentDate' => $paymentDate,
+                    'paymentTime' => $paymentTime
+                ]
+            ]);
 
         } catch (\Exception $e) {
-            Log::error('Error consultando estado', ['error' => $e->getMessage()]);
-            return response('', 204); // También devolver 204 en caso de error para evitar problemas
+            Log::error('Excepción crítica en consultarEstado', [
+                'error' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile()
+            ]);
+            return response()->json(['success' => false, 'message' => 'Error interno del servidor: ' . $e->getMessage()], 500);
         }
     }
 

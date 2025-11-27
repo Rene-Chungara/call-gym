@@ -1,7 +1,8 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import axios from 'axios';
 
 const props = defineProps({
     qrImage: String,
@@ -16,30 +17,42 @@ const verificando = ref(false);
 const contadorVerificacion = ref(0);
 let pollingInterval = null;
 
-const verificarEstado = () => {
+const verificarEstado = async () => {
+    if (verificando.value) return;
+
     verificando.value = true;
     contadorVerificacion.value++;
-    router.post(route('cuotas-pago.pagofacil.consultar'), {
-        transactionId: props.transactionId,
-        cuotaId: props.cuotaId,
-        suscripcionId: props.suscripcionId
-    }, {
-        preserveScroll: true,
-        preserveState: true,
-        onSuccess: () => {
-            verificando.value = false;
-        },
-        onError: () => {
-            verificando.value = false;
-        },
-        onFinish: () => {
-            verificando.value = false;
+
+    try {
+        const response = await axios.post('/cuotas-pago/pagofacil/consultar', {
+            transactionId: props.transactionId,
+            cuotaId: props.cuotaId,
+            suscripcionId: props.suscripcionId
+        }, {
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+
+        if (response.data.success && response.data.paid) {
+            if (pollingInterval) {
+                clearInterval(pollingInterval);
+                pollingInterval = null;
+            }
+
+            setTimeout(() => {
+                window.location.href = response.data.redirect;
+            }, 100);
         }
-    });
+    } catch (error) {
+        console.error('Error al verificar estado:', error);
+    } finally {
+        verificando.value = false;
+    }
 };
 
 onMounted(() => {
-    // Verificar automáticamente cada 5 segundos
     pollingInterval = setInterval(() => {
         verificarEstado();
     }, 5000);

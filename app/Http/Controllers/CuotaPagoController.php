@@ -452,12 +452,12 @@ class CuotaPagoController extends Controller
                 }
             }
 
-            // Devolver respuesta vacía con código 204 (No Content)
-            return response('', 204);
+            // Mantener en la página actual sin hacer nada
+            return Inertia::location(url()->current());
 
         } catch (\Exception $e) {
             Log::error('Error consultando estado (Cuota)', ['error' => $e->getMessage()]);
-            return response('', 204);
+            return Inertia::location(url()->current());
         }
     }
 
