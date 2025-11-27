@@ -5,7 +5,6 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import InputError from "@/Components/InputError.vue";
 import InputLabel from "@/Components/InputLabel.vue";
 import TextInput from "@/Components/TextInput.vue";
-import PrimaryButton from "@/Components/PrimaryButton.vue";
 
 const props = defineProps({
     cuota: Object,
@@ -34,7 +33,42 @@ function formatFecha(fecha) {
 }
 
 function enviarFormulario() {
-    form.post(route("cuotas-pago.store", { cuotaPago: props.cuota.id }));
+    // Si es pago con tarjeta, usar formulario HTML nativo para evitar Inertia
+    if (form.metodo_pago === 'tarjeta') {
+        const nativeForm = document.createElement('form');
+        nativeForm.method = 'POST';
+        nativeForm.action = route('cuotas-pago.store-card', { cuotaPago: props.cuota.id });
+
+        // CSRF token - Usar page.props.csrf_token o buscar en meta tag como fallback seguro
+        const csrfToken = page.props.csrf_token || document.head.querySelector('meta[name="csrf-token"]')?.content;
+
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = '_token';
+        csrfInput.value = csrfToken;
+        nativeForm.appendChild(csrfInput);
+
+        // Datos del formulario
+        const fields = {
+            monto_pagado: form.monto_pagado,
+            metodo_pago: form.metodo_pago,
+            observaciones: form.observaciones
+        };
+
+        Object.keys(fields).forEach(key => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = fields[key] || '';
+            nativeForm.appendChild(input);
+        });
+
+        document.body.appendChild(nativeForm);
+        nativeForm.submit();
+    } else {
+        // Pago en efectivo o QR: usar Inertia normalmente
+        form.post(route("cuotas-pago.store", { cuotaPago: props.cuota.id }));
+    }
 }
 </script>
 
@@ -115,7 +149,8 @@ function enviarFormulario() {
                                 <select id="metodo_pago" v-model="form.metodo_pago"
                                     class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-slate-700 dark:text-white">
                                     <option v-if="!isCliente" value="efectivo">Efectivo</option>
-                                    <option value="tarjeta">Tarjeta</option>
+                                    <option value="tarjeta">Tarjeta (Stripe)</option>
+                                    <option value="qr">QR (PagoFácil)</option>
                                 </select>
                                 <InputError class="mt-2" :message="form.errors.metodo_pago" />
                             </div>

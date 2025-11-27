@@ -67,6 +67,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Rutas personalizadas para pago de cuotas
     Route::get('/cuotas-pago/{cuotaPago}/pagar', [CuotaPagoController::class, 'create'])->name('cuotas-pago.create');
     Route::post('/cuotas-pago/{cuotaPago}/pagar', [CuotaPagoController::class, 'store'])->name('cuotas-pago.store');
+    Route::get('/cuotas-pago/{cuotaPago}/stripe/success', [CuotaPagoController::class, 'stripeSuccess'])->name('cuotas-pago.stripe.success');
+
+    // Rutas para pagos al contado (Suscripciones completas)
+    Route::get('/pagos/crear', [PagoController::class, 'create'])->name('pagos.create');
+    Route::post('/pagos/store', [PagoController::class, 'store'])->name('pagos.store');
+    Route::get('/pagos/store', function () {
+        return redirect()->route('pagos.create');
+    }); // Redirect GET to create form
+    Route::get('/pagos/{suscripcion}/stripe/success', [PagoController::class, 'stripeSuccess'])->name('pagos.stripe.success');
 
     Route::post('/rutina-sesion/store', [RutinaSesionController::class, 'store'])->name('rutina-sesion.store');
     Route::get('/rutinas/{rutina}/sesion/crear', [RutinaSesionController::class, 'create'])->name('rutina-sesion.create');
@@ -80,6 +89,29 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Buscador Global
     Route::get('/global-search', [GlobalSearchController::class, 'search'])->name('global.search');
 
+});
+
+
+// PAGOS CON STRIPE (fuera de Inertia para evitar CORS)
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::post('/cuotas-pago/{cuotaPago}/pagar-tarjeta', [CuotaPagoController::class, 'store'])->name('cuotas-pago.store-card')->withoutMiddleware(\App\Http\Middleware\HandleInertiaRequests::class);
+    Route::post('/pagos/pagar-tarjeta', [PagoController::class, 'store'])->name('pagos.store-card')->withoutMiddleware(\App\Http\Middleware\HandleInertiaRequests::class);
+
+    // PagoFácil - Suscripciones
+    Route::post('/pagos/pagofacil/callback', [PagoController::class, 'callbackPagoFacil'])
+        ->name('pagos.pagofacil.callback')
+        ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class]);
+
+    Route::post('/pagos/pagofacil/consultar', [PagoController::class, 'consultarEstadoPagoFacil'])
+        ->name('pagos.pagofacil.consultar');
+
+    // PagoFácil - Cuotas
+    Route::post('/cuotas-pago/pagofacil/callback', [CuotaPagoController::class, 'callbackPagoFacil'])
+        ->name('cuotas-pago.pagofacil.callback')
+        ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class]);
+
+    Route::post('/cuotas-pago/pagofacil/consultar', [CuotaPagoController::class, 'consultarEstadoPagoFacil'])
+        ->name('cuotas-pago.pagofacil.consultar');
 });
 
 // PAGOS CON STRIPE

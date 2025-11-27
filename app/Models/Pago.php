@@ -16,6 +16,10 @@ class Pago extends Model
         'metodo_pago',
         'estado_pago',
         'stripe_status',
+        'stripe_session_id',
+        'stripe_payment_id',
+        'pagofacil_transaction_id',
+        'qr_image',
         'observaciones',
     ];
 

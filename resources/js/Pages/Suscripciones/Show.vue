@@ -1,7 +1,11 @@
 <script setup>
 import { computed } from 'vue';
-import { Link, router } from '@inertiajs/vue3';
+import { Link, router, usePage } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+
+const page = usePage();
+const user = computed(() => page.props.auth.user);
+const isCliente = computed(() => user.value.is_clientes && !user.value.is_propietario && !user.value.is_secretaria);
 
 const props = defineProps({
     suscripcion: Object,
@@ -94,8 +98,8 @@ function pagarMasTarde() {
                                 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-100': suscripcion.estado_pago === 'vencido',
                             }">
                                 {{ suscripcion.estado_pago === 'pagado' ? 'Pagado' : suscripcion.estado_pago ===
-                                'pendiente' ?
-                                'Pendiente' : 'Vencido' }}
+                                    'pendiente' ?
+                                    'Pendiente' : 'Vencido' }}
                             </span>
                         </div>
                     </div>
@@ -207,7 +211,8 @@ function pagarMasTarde() {
                             </button>
 
                             <!-- Crear plan a crédito -->
-                            <Link v-if="suscripcion.tipo_pago === 'contado' && suscripcion.monto_pendiente > 0"
+                            <Link
+                                v-if="!isCliente && suscripcion.tipo_pago === 'contado' && suscripcion.monto_pendiente > 0"
                                 :href="route('plan-pagos.create')"
                                 class="block w-full text-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition">
                             Crear Plan a Crédito
@@ -294,7 +299,7 @@ function pagarMasTarde() {
                                 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-100': plan.estado === 'cancelado',
                             }">
                                 {{ plan.estado === 'completado' ? 'Completado' : plan.estado === 'activo' ? 'Activo' :
-                                'Cancelado' }}
+                                    'Cancelado' }}
                             </span>
                         </div>
 
@@ -340,14 +345,14 @@ function pagarMasTarde() {
                                                 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-100': cuota.estado === 'vencido',
                                             }">
                                                 {{ cuota.estado === 'pagado' ? 'Pagada' : cuota.estado === 'pendiente' ?
-                                                'Pendiente' : 'Vencida' }}
+                                                    'Pendiente' : 'Vencida' }}
                                             </span>
                                         </td>
                                         <td class="px-4 py-3">
                                             <Link v-if="cuota.estado === 'pendiente'"
                                                 :href="route('cuotas-pago.create', cuota.id)"
                                                 class="inline-block px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-xs font-medium transition">
-                                                Pagar
+                                            Pagar
                                             </Link>
                                             <div>
                                                 <p class="text-gray-600 dark:text-gray-400">Vencimiento</p>
@@ -513,7 +518,7 @@ function pagarMasTarde() {
                                 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-100': plan.estado === 'cancelado',
                             }">
                                 {{ plan.estado === 'completado' ? 'Completado' : plan.estado === 'activo' ? 'Activo' :
-                                'Cancelado' }}
+                                    'Cancelado' }}
                             </span>
                         </div>
 
@@ -559,7 +564,7 @@ function pagarMasTarde() {
                                                 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-100': cuota.estado === 'vencido',
                                             }">
                                                 {{ cuota.estado === 'pagado' ? 'Pagada' : cuota.estado === 'pendiente' ?
-                                                'Pendiente' : 'Vencida' }}
+                                                    'Pendiente' : 'Vencida' }}
                                             </span>
                                         </td>
                                         <td class="px-4 py-3">

@@ -35,4 +35,16 @@ return [
         ],
     ],
 
+    'stripe' => [
+        'model' => App\Models\User::class,
+        'key' => env('STRIPE_KEY'),
+        'secret' => env('STRIPE_SECRET'),
+    ],
+
+    'pagofacil' => [
+        'base_url' => env('PAGOFACIL_URL', 'https://servicios.pagofacil.com.bo/api/servicio'),
+        'token_service' => env('PAGOFACIL_TOKEN_SERVICE'),
+        'token_secret' => env('PAGOFACIL_TOKEN_SECRET'),
+    ],
+
 ];

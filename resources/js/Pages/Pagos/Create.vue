@@ -1,51 +1,82 @@
 <script setup>
-import { ref, computed } from "vue";
-import { useForm, Link, Head } from "@inertiajs/vue3";
+import { useForm, usePage } from "@inertiajs/vue3";
+import { computed } from "vue";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import InputError from "@/Components/InputError.vue";
 import InputLabel from "@/Components/InputLabel.vue";
 import TextInput from "@/Components/TextInput.vue";
-import PrimaryButton from "@/Components/PrimaryButton.vue";
 
 const props = defineProps({
-    suscripciones: Array,
-    suscripcionSeleccionada: Object,
+    suscripcion: Object,
 });
 
+const page = usePage();
+const user = computed(() => page.props.auth.user);
+const isCliente = computed(() => user.value.is_clientes && !user.value.is_propietario && !user.value.is_secretaria);
+
 const form = useForm({
-    suscripcion_id: props.suscripcionSeleccionada?.id || "",
-    monto_abonado: props.suscripcionSeleccionada?.precio ? String(props.suscripcionSeleccionada.precio) : "",
-    metodo_pago: "efectivo",
+    suscripcion_id: props.suscripcion.id,
+    monto_pagado: props.suscripcion.monto_pendiente,
+    metodo_pago: "tarjeta",
     observaciones: "",
 });
 
-// Obtener suscripción seleccionada
-const suscripcionSeleccionada = computed(() => {
-    return props.suscripciones.find((x) => x.id == form.suscripcion_id);
-});
-
-// Selección automática del precio
-function updateMontoTotal() {
-    let s = suscripcionSeleccionada.value;
-    if (s) {
-        form.monto_abonado = String(s.precio);
-    }
+// Formatear fecha
+function formatFecha(fecha) {
+    if (!fecha) return '-';
+    const date = new Date(fecha);
+    const dia = String(date.getDate()).padStart(2, '0');
+    const mes = String(date.getMonth() + 1).padStart(2, '0');
+    const año = date.getFullYear();
+    return `${dia}-${mes}-${año}`;
 }
 
-// Mostrar el monto total de la membresía
-const montoTotal = computed(() => {
-    const s = suscripcionSeleccionada.value;
-    return s ? s.precio : 0;
-});
+function enviarFormulario() {
+    // Si es pago con tarjeta, usar formulario HTML nativo para evitar Inertia
+    if (form.metodo_pago === 'tarjeta') {
+        const nativeForm = document.createElement('form');
+        nativeForm.method = 'POST';
+        nativeForm.action = route('pagos.store-card');
+
+        // CSRF token
+        const csrfToken = page.props.csrf_token || document.head.querySelector('meta[name="csrf-token"]')?.content;
+
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = '_token';
+        csrfInput.value = csrfToken;
+        nativeForm.appendChild(csrfInput);
+
+        // Datos del formulario
+        const fields = {
+            suscripcion_id: form.suscripcion_id,
+            monto_pagado: form.monto_pagado,
+            metodo_pago: form.metodo_pago,
+            observaciones: form.observaciones
+        };
+
+        Object.keys(fields).forEach(key => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = fields[key] || '';
+            nativeForm.appendChild(input);
+        });
+
+        document.body.appendChild(nativeForm);
+        nativeForm.submit();
+    } else {
+        // Pago en efectivo o QR: usar Inertia normalmente
+        form.post(route("pagos.store"));
+    }
+}
 </script>
 
 <template>
     <AuthenticatedLayout>
-        <Head title="Registrar Pago" />
-
         <template #header>
             <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-100 leading-tight">
-                Registrar Nuevo Pago
+                Realizar Pago de Suscripción
             </h2>
         </template>
 
@@ -53,114 +84,87 @@ const montoTotal = computed(() => {
             <div class="max-w-2xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-white dark:bg-slate-800 overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6 text-gray-900 dark:text-gray-100">
-                        <h1 class="text-2xl font-bold mb-6">Registrar Pago</h1>
-
-                        <form @submit.prevent="form.post(route('pagos.store'))" class="space-y-6">
-
-                            <!-- Selección de suscripción -->
-                            <div>
-                                <InputLabel for="suscripcion_id" value="Seleccionar Suscripción" />
-                                <select
-                                    id="suscripcion_id"
-                                    v-model="form.suscripcion_id"
-                                    @change="updateMontoTotal"
-                                    class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-slate-700 dark:text-white"
-                                >
-                                    <option value="">-- Seleccione una suscripción --</option>
-                                    <option v-for="s in props.suscripciones" :key="s.id" :value="s.id">
-                                        {{ s.usuario }} — {{ s.membresia }} (Bs. {{ s.precio }})
-                                    </option>
-                                </select>
-                                <InputError :message="form.errors.suscripcion_id" class="mt-2" />
-                            </div>
-
-                            <!-- Monto total -->
-                            <div>
-                                <InputLabel for="monto_total" value="Monto Total (Bs.)" />
-                                <div class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-md bg-gray-100 dark:bg-slate-600 text-gray-900 dark:text-gray-100">
-                                    Bs. {{ montoTotal.toFixed(2) }}
+                        <!-- INFORMACIÓN DE LA SUSCRIPCIÓN -->
+                        <div class="mb-6 pb-6 border-b border-gray-200 dark:border-slate-700">
+                            <h3 class="text-lg font-semibold mb-4">Detalles de la Suscripción</h3>
+                            <div class="grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                    <span class="text-gray-600 dark:text-gray-400">Cliente:</span>
+                                    <p class="font-medium">{{ suscripcion.usuario }}</p>
+                                </div>
+                                <div>
+                                    <span class="text-gray-600 dark:text-gray-400">Membresía:</span>
+                                    <p class="font-medium">{{ suscripcion.membresia }}</p>
+                                </div>
+                                <div>
+                                    <span class="text-gray-600 dark:text-gray-400">Vencimiento:</span>
+                                    <p class="font-medium">{{ formatFecha(suscripcion.fecha_fin) }}</p>
+                                </div>
+                                <div>
+                                    <span class="text-gray-600 dark:text-gray-400">Monto Total:</span>
+                                    <p class="font-medium">Bs. {{ parseFloat(suscripcion.monto_total).toFixed(2) }}</p>
                                 </div>
                             </div>
+                        </div>
 
-                            <!-- Monto a abonar -->
+                        <!-- MONTO A PAGAR -->
+                        <div class="mb-6 pb-6 border-b border-gray-200 dark:border-slate-700">
+                            <div class="bg-blue-50 dark:bg-blue-900 p-4 rounded-lg">
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <span class="text-gray-600 dark:text-gray-400">Monto Pendiente:</span>
+                                        <p class="font-bold text-2xl text-blue-600 dark:text-blue-400">
+                                            Bs. {{ parseFloat(suscripcion.monto_pendiente).toFixed(2) }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- FORMULARIO DE PAGO -->
+                        <form @submit.prevent="enviarFormulario" class="space-y-6">
+                            <!-- Monto a Pagar -->
+                            <!-- Monto a Pagar -->
                             <div>
-                                <InputLabel for="monto_abonado" value="Monto a Abonar (Bs.)" />
-                                <TextInput
-                                    id="monto_abonado"
-                                    v-model="form.monto_abonado"
-                                    type="number"
-                                    step="0.01"
-                                    min="0.01"
-                                    :max="montoTotal"
-                                    class="mt-1 block w-full"
-                                    placeholder="Ingrese el monto a pagar"
-                                />
-                                <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                                    Máximo permitido: <span class="font-bold">Bs. {{ montoTotal.toFixed(2) }}</span>
-                                </p>
-                                <InputError :message="form.errors.monto_abonado" class="mt-2" />
+                                <InputLabel for="monto_pagado" value="Monto a Pagar (Bs.)" />
+                                <TextInput id="monto_pagado" v-model="form.monto_pagado" type="number" step="0.01"
+                                    class="mt-1 block w-full bg-gray-100 dark:bg-slate-700" readonly disabled />
+                                <InputError class="mt-2" :message="form.errors.monto_pagado" />
                             </div>
 
-                            <!-- Método de pago -->
+                            <!-- Método de Pago -->
                             <div>
                                 <InputLabel for="metodo_pago" value="Método de Pago" />
-                                <select
-                                    id="metodo_pago"
-                                    v-model="form.metodo_pago"
+                                <select id="metodo_pago" v-model="form.metodo_pago"
                                     class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-slate-700 dark:text-white"
-                                >
-                                    <option value="efectivo">Efectivo</option>
-                                    <option value="tarjeta">Tarjeta de Crédito</option>
+                                    required>
+                                    <option v-if="!isCliente" value="efectivo">Efectivo</option>
+                                    <option value="tarjeta">Tarjeta (Stripe)</option>
+                                    <option value="qr">QR (PagoFácil)</option>
                                 </select>
-                                <InputError :message="form.errors.metodo_pago" class="mt-2" />
+                                <InputError class="mt-2" :message="form.errors.metodo_pago" />
                             </div>
 
-                            <!-- Observaciones (opcional) -->
+                            <!-- Observaciones -->
                             <div>
                                 <InputLabel for="observaciones" value="Observaciones (Opcional)" />
-                                <textarea
-                                    id="observaciones"
-                                    v-model="form.observaciones"
-                                    rows="3"
+                                <textarea id="observaciones" v-model="form.observaciones"
                                     class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-slate-700 dark:text-white"
-                                    placeholder="Notas sobre el pago..."
-                                ></textarea>
-                                <InputError :message="form.errors.observaciones" class="mt-2" />
-                            </div>
-
-                            <!-- Resumen -->
-                            <div class="bg-indigo-50 dark:bg-slate-700 p-4 rounded-lg border border-indigo-200 dark:border-slate-600">
-                                <h3 class="font-semibold text-indigo-900 dark:text-indigo-100 mb-3">Resumen del Pago</h3>
-                                <div class="space-y-2 text-sm">
-                                    <div class="flex justify-between">
-                                        <span class="text-gray-700 dark:text-gray-300">Monto Total:</span>
-                                        <span class="font-bold">Bs. {{ montoTotal.toFixed(2) }}</span>
-                                    </div>
-                                    <div class="flex justify-between">
-                                        <span class="text-gray-700 dark:text-gray-300">Monto a Abonar:</span>
-                                        <span class="font-bold text-green-600 dark:text-green-400">Bs. {{ (parseFloat(form.monto_abonado) || 0).toFixed(2) }}</span>
-                                    </div>
-                                    <div class="border-t border-indigo-200 dark:border-slate-600 pt-2 mt-2 flex justify-between">
-                                        <span class="text-gray-700 dark:text-gray-300">Método:</span>
-                                        <span class="font-bold">{{ form.metodo_pago === 'efectivo' ? '💵 Efectivo' : '💳 Tarjeta' }}</span>
-                                    </div>
-                                </div>
+                                    rows="3"></textarea>
+                                <InputError class="mt-2" :message="form.errors.observaciones" />
                             </div>
 
                             <!-- Botones -->
-                            <div class="flex gap-3 justify-end">
-                                <Link
-                                    :href="route('pagos.index')"
-                                    class="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400 dark:bg-slate-700 dark:hover:bg-slate-600 text-gray-800 dark:text-gray-100 text-sm shadow-sm"
-                                >
+                            <div class="flex gap-3 justify-end pt-4 border-t border-gray-200 dark:border-slate-700">
+                                <a :href="route('suscripciones.show', suscripcion.id)"
+                                    class="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400 dark:bg-slate-700 dark:hover:bg-slate-600 text-gray-800 dark:text-gray-100 text-sm shadow-sm">
                                     Cancelar
-                                </Link>
+                                </a>
 
-                                <PrimaryButton
-                                    :disabled="form.processing || !form.suscripcion_id"
-                                >
-                                    {{ form.metodo_pago === 'efectivo' ? 'Registrar Pago en Efectivo' : 'Pagar con Tarjeta' }}
-                                </PrimaryButton>
+                                <button type="submit" :disabled="form.processing"
+                                    class="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white rounded text-sm shadow-sm">
+                                    Registrar Pago
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -169,4 +173,3 @@ const montoTotal = computed(() => {
         </div>
     </AuthenticatedLayout>
 </template>
-
