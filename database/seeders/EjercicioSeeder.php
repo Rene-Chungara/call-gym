@@ -2,64 +2,248 @@
 
 namespace Database\Seeders;
 
-use App\Models\Ejercicio;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class EjercicioSeeder extends Seeder
 {
+    /**
+     * Run the database seeds.
+     */
     public function run(): void
     {
-        $ejercicios = [
+        DB::table('ejercicios')->insert([
             // Pecho
-            ['nombre' => 'Press de Banca', 'grupo_muscular' => 'Pecho', 'dificultad' => 'intermedio', 'descripcion' => 'Ejercicio fundamental para el desarrollo del pecho', 'equipo_requerido' => 'Barra y Banco'],
-            ['nombre' => 'Aperturas con Mancuernas', 'grupo_muscular' => 'Pecho', 'dificultad' => 'intermedio', 'descripcion' => 'Aislamiento de pecho con mancuernas', 'equipo_requerido' => 'Mancuernas'],
-            ['nombre' => 'Press Inclinado', 'grupo_muscular' => 'Pecho', 'dificultad' => 'intermedio', 'descripcion' => 'Enfatiza la parte superior del pecho', 'equipo_requerido' => 'Barra y Banco Inclinado'],
-            ['nombre' => 'Fondos en Paralelas', 'grupo_muscular' => 'Pecho', 'dificultad' => 'avanzado', 'descripcion' => 'Ejercicio de peso corporal para pecho y tríceps', 'equipo_requerido' => 'Paralelas'],
-            
-            // Espalda
-            ['nombre' => 'Remo con Barra', 'grupo_muscular' => 'Espalda', 'dificultad' => 'intermedio', 'descripcion' => 'Ejercicio fundamental para la espalda', 'equipo_requerido' => 'Barra'],
-            ['nombre' => 'Dominadas', 'grupo_muscular' => 'Espalda', 'dificultad' => 'avanzado', 'descripcion' => 'Ejercicio de peso corporal para espalda', 'equipo_requerido' => 'Barra de Dominadas'],
-            ['nombre' => 'Jalón Lateral', 'grupo_muscular' => 'Espalda', 'dificultad' => 'principiante', 'descripcion' => 'Aislamiento de espalda en máquina', 'equipo_requerido' => 'Máquina de Jalón'],
-            ['nombre' => 'Remo Máquina', 'grupo_muscular' => 'Espalda', 'dificultad' => 'principiante', 'descripcion' => 'Remo en máquina para principiantes', 'equipo_requerido' => 'Máquina de Remo'],
-            
-            // Hombros
-            ['nombre' => 'Press de Hombros', 'grupo_muscular' => 'Hombros', 'dificultad' => 'intermedio', 'descripcion' => 'Ejercicio fundamental para hombros', 'equipo_requerido' => 'Barra o Mancuernas'],
-            ['nombre' => 'Elevaciones Laterales', 'grupo_muscular' => 'Hombros', 'dificultad' => 'principiante', 'descripcion' => 'Aislamiento de deltoides laterales', 'equipo_requerido' => 'Mancuernas'],
-            ['nombre' => 'Elevaciones Frontales', 'grupo_muscular' => 'Hombros', 'dificultad' => 'principiante', 'descripcion' => 'Aislamiento de deltoides frontales', 'equipo_requerido' => 'Mancuernas o Barra'],
-            
-            // Brazos - Bíceps
-            ['nombre' => 'Curl de Bíceps', 'grupo_muscular' => 'Bíceps', 'dificultad' => 'principiante', 'descripcion' => 'Ejercicio fundamental para bíceps', 'equipo_requerido' => 'Mancuernas o Barra'],
-            ['nombre' => 'Curl Predicador', 'grupo_muscular' => 'Bíceps', 'dificultad' => 'intermedio', 'descripcion' => 'Aislamiento de bíceps en banco predicador', 'equipo_requerido' => 'Banco Predicador y Barra'],
-            ['nombre' => 'Curl Máquina', 'grupo_muscular' => 'Bíceps', 'dificultad' => 'principiante', 'descripcion' => 'Curl en máquina para principiantes', 'equipo_requerido' => 'Máquina de Curl'],
-            
-            // Brazos - Tríceps
-            ['nombre' => 'Extensión de Tríceps', 'grupo_muscular' => 'Tríceps', 'dificultad' => 'principiante', 'descripcion' => 'Ejercicio fundamental para tríceps', 'equipo_requerido' => 'Mancuernas o Barra'],
-            ['nombre' => 'Fondos de Banco', 'grupo_muscular' => 'Tríceps', 'dificultad' => 'intermedio', 'descripcion' => 'Ejercicio de peso corporal para tríceps', 'equipo_requerido' => 'Banco'],
-            ['nombre' => 'Extensión Francesa', 'grupo_muscular' => 'Tríceps', 'dificultad' => 'intermedio', 'descripcion' => 'Aislamiento de tríceps con barra', 'equipo_requerido' => 'Barra EZ'],
-            
-            // Piernas - Cuádriceps
-            ['nombre' => 'Sentadilla', 'grupo_muscular' => 'Cuádriceps', 'dificultad' => 'avanzado', 'descripcion' => 'Ejercicio fundamental para piernas', 'equipo_requerido' => 'Barra y Rack'],
-            ['nombre' => 'Prensa de Piernas', 'grupo_muscular' => 'Cuádriceps', 'dificultad' => 'intermedio', 'descripcion' => 'Ejercicio en máquina para cuádriceps', 'equipo_requerido' => 'Máquina de Prensa'],
-            ['nombre' => 'Extensión de Cuádriceps', 'grupo_muscular' => 'Cuádriceps', 'dificultad' => 'principiante', 'descripcion' => 'Aislamiento de cuádriceps en máquina', 'equipo_requerido' => 'Máquina de Extensión'],
-            
-            // Piernas - Isquiotibiales
-            ['nombre' => 'Peso Muerto', 'grupo_muscular' => 'Isquiotibiales', 'dificultad' => 'avanzado', 'descripcion' => 'Ejercicio fundamental para espalda baja e isquiotibiales', 'equipo_requerido' => 'Barra'],
-            ['nombre' => 'Flexión de Isquiotibiales', 'grupo_muscular' => 'Isquiotibiales', 'dificultad' => 'principiante', 'descripcion' => 'Aislamiento de isquiotibiales en máquina', 'equipo_requerido' => 'Máquina de Flexión'],
-            ['nombre' => 'Buenos Días', 'grupo_muscular' => 'Isquiotibiales', 'dificultad' => 'intermedio', 'descripcion' => 'Ejercicio para isquiotibiales y espalda baja', 'equipo_requerido' => 'Barra'],
-            
-            // Piernas - Glúteos
-            ['nombre' => 'Sentadilla Búlgara', 'grupo_muscular' => 'Glúteos', 'dificultad' => 'intermedio', 'descripcion' => 'Ejercicio unilateral para glúteos', 'equipo_requerido' => 'Banco y Mancuernas'],
-            ['nombre' => 'Hip Thrust', 'grupo_muscular' => 'Glúteos', 'dificultad' => 'intermedio', 'descripcion' => 'Ejercicio específico para glúteos', 'equipo_requerido' => 'Banco y Barra'],
-            ['nombre' => 'Patada de Glúteos', 'grupo_muscular' => 'Glúteos', 'dificultad' => 'principiante', 'descripcion' => 'Aislamiento de glúteos en máquina', 'equipo_requerido' => 'Máquina de Patada'],
-            
-            // Abdominales
-            ['nombre' => 'Abdominales en Máquina', 'grupo_muscular' => 'Abdominales', 'dificultad' => 'principiante', 'descripcion' => 'Aislamiento de abdominales en máquina', 'equipo_requerido' => 'Máquina de Abdominales'],
-            ['nombre' => 'Crunch', 'grupo_muscular' => 'Abdominales', 'dificultad' => 'principiante', 'descripcion' => 'Ejercicio básico de abdominales', 'equipo_requerido' => 'Colchoneta'],
-            ['nombre' => 'Plancha', 'grupo_muscular' => 'Abdominales', 'dificultad' => 'intermedio', 'descripcion' => 'Ejercicio de peso corporal para core', 'equipo_requerido' => 'Colchoneta'],
-        ];
+            [
+                'nombre' => 'Press de Banca',
+                'descripcion' => 'Ejercicio fundamental para desarrollar el pecho, tríceps y hombros',
+                'grupo_muscular' => 'Pecho',
+                'dificultad' => 'intermedio',
+                'equipo_requerido' => 'Barra, Banco',
+                'imagen_url' => null,
+                'video_url' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'nombre' => 'Flexiones',
+                'descripcion' => 'Ejercicio de peso corporal para pecho y tríceps',
+                'grupo_muscular' => 'Pecho',
+                'dificultad' => 'principiante',
+                'equipo_requerido' => 'Ninguno',
+                'imagen_url' => null,
+                'video_url' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'nombre' => 'Aperturas con Mancuernas',
+                'descripcion' => 'Ejercicio de aislamiento para el pecho',
+                'grupo_muscular' => 'Pecho',
+                'dificultad' => 'intermedio',
+                'equipo_requerido' => 'Mancuernas, Banco',
+                'imagen_url' => null,
+                'video_url' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
 
-        foreach ($ejercicios as $ejercicio) {
-            Ejercicio::create($ejercicio);
-        }
+            // Espalda
+            [
+                'nombre' => 'Dominadas',
+                'descripcion' => 'Ejercicio compuesto para espalda y bíceps',
+                'grupo_muscular' => 'Espalda',
+                'dificultad' => 'avanzado',
+                'equipo_requerido' => 'Barra de dominadas',
+                'imagen_url' => null,
+                'video_url' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'nombre' => 'Remo con Barra',
+                'descripcion' => 'Ejercicio fundamental para el grosor de la espalda',
+                'grupo_muscular' => 'Espalda',
+                'dificultad' => 'intermedio',
+                'equipo_requerido' => 'Barra',
+                'imagen_url' => null,
+                'video_url' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'nombre' => 'Peso Muerto',
+                'descripcion' => 'Ejercicio compuesto que trabaja toda la cadena posterior',
+                'grupo_muscular' => 'Espalda',
+                'dificultad' => 'avanzado',
+                'equipo_requerido' => 'Barra',
+                'imagen_url' => null,
+                'video_url' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+
+            // Piernas
+            [
+                'nombre' => 'Sentadillas',
+                'descripcion' => 'Rey de los ejercicios de pierna',
+                'grupo_muscular' => 'Piernas',
+                'dificultad' => 'intermedio',
+                'equipo_requerido' => 'Barra, Rack',
+                'imagen_url' => null,
+                'video_url' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'nombre' => 'Prensa de Piernas',
+                'descripcion' => 'Ejercicio de empuje para cuádriceps y glúteos',
+                'grupo_muscular' => 'Piernas',
+                'dificultad' => 'principiante',
+                'equipo_requerido' => 'Máquina de prensa',
+                'imagen_url' => null,
+                'video_url' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'nombre' => 'Zancadas',
+                'descripcion' => 'Ejercicio unilateral para piernas y glúteos',
+                'grupo_muscular' => 'Piernas',
+                'dificultad' => 'intermedio',
+                'equipo_requerido' => 'Mancuernas',
+                'imagen_url' => null,
+                'video_url' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'nombre' => 'Curl de Piernas',
+                'descripcion' => 'Ejercicio de aislamiento para femorales',
+                'grupo_muscular' => 'Piernas',
+                'dificultad' => 'principiante',
+                'equipo_requerido' => 'Máquina de curl',
+                'imagen_url' => null,
+                'video_url' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+
+            // Hombros
+            [
+                'nombre' => 'Press Militar',
+                'descripcion' => 'Ejercicio fundamental para hombros',
+                'grupo_muscular' => 'Hombros',
+                'dificultad' => 'intermedio',
+                'equipo_requerido' => 'Barra',
+                'imagen_url' => null,
+                'video_url' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'nombre' => 'Elevaciones Laterales',
+                'descripcion' => 'Ejercicio de aislamiento para deltoides laterales',
+                'grupo_muscular' => 'Hombros',
+                'dificultad' => 'principiante',
+                'equipo_requerido' => 'Mancuernas',
+                'imagen_url' => null,
+                'video_url' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'nombre' => 'Remo al Mentón',
+                'descripcion' => 'Ejercicio para deltoides y trapecios',
+                'grupo_muscular' => 'Hombros',
+                'dificultad' => 'intermedio',
+                'equipo_requerido' => 'Barra o Mancuernas',
+                'imagen_url' => null,
+                'video_url' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+
+            // Brazos
+            [
+                'nombre' => 'Curl de Bíceps con Barra',
+                'descripcion' => 'Ejercicio clásico para bíceps',
+                'grupo_muscular' => 'Brazos',
+                'dificultad' => 'principiante',
+                'equipo_requerido' => 'Barra',
+                'imagen_url' => null,
+                'video_url' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'nombre' => 'Fondos en Paralelas',
+                'descripcion' => 'Ejercicio compuesto para tríceps y pecho',
+                'grupo_muscular' => 'Brazos',
+                'dificultad' => 'intermedio',
+                'equipo_requerido' => 'Barras paralelas',
+                'imagen_url' => null,
+                'video_url' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'nombre' => 'Extensiones de Tríceps',
+                'descripcion' => 'Ejercicio de aislamiento para tríceps',
+                'grupo_muscular' => 'Brazos',
+                'dificultad' => 'principiante',
+                'equipo_requerido' => 'Mancuerna o Polea',
+                'imagen_url' => null,
+                'video_url' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+
+            // Core/Abdomen
+            [
+                'nombre' => 'Plancha',
+                'descripcion' => 'Ejercicio isométrico para el core',
+                'grupo_muscular' => 'Abdomen',
+                'dificultad' => 'principiante',
+                'equipo_requerido' => 'Ninguno',
+                'imagen_url' => null,
+                'video_url' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'nombre' => 'Abdominales Crunch',
+                'descripcion' => 'Ejercicio básico para abdominales',
+                'grupo_muscular' => 'Abdomen',
+                'dificultad' => 'principiante',
+                'equipo_requerido' => 'Ninguno',
+                'imagen_url' => null,
+                'video_url' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'nombre' => 'Elevaciones de Piernas',
+                'descripcion' => 'Ejercicio para abdominales inferiores',
+                'grupo_muscular' => 'Abdomen',
+                'dificultad' => 'intermedio',
+                'equipo_requerido' => 'Barra de dominadas',
+                'imagen_url' => null,
+                'video_url' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'nombre' => 'Russian Twist',
+                'descripcion' => 'Ejercicio para oblicuos',
+                'grupo_muscular' => 'Abdomen',
+                'dificultad' => 'intermedio',
+                'equipo_requerido' => 'Disco o Mancuerna',
+                'imagen_url' => null,
+                'video_url' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+        ]);
     }
 }

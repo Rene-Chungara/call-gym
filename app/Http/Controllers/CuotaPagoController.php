@@ -452,12 +452,12 @@ class CuotaPagoController extends Controller
                 }
             }
 
-            // No hacer redirect, devolver JSON para que Inertia no haga nada
-            return response()->json(['status' => 'pending'], 200);
+            // Devolver respuesta vacía con código 204 (No Content)
+            return response('', 204);
 
         } catch (\Exception $e) {
             Log::error('Error consultando estado (Cuota)', ['error' => $e->getMessage()]);
-            return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
+            return response('', 204);
         }
     }
 

@@ -506,12 +506,12 @@ class PagoController extends Controller
                 }
             }
 
-            // No hacer redirect, solo devolver respuesta vacía para que Inertia no haga nada
-            return response()->json(['status' => 'pending'], 200);
+            // Devolver respuesta vacía con código 204 (No Content) para que Inertia no haga nada
+            return response('', 204);
 
         } catch (\Exception $e) {
             Log::error('Error consultando estado', ['error' => $e->getMessage()]);
-            return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
+            return response('', 204); // También devolver 204 en caso de error para evitar problemas
         }
     }
 
