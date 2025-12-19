@@ -104,6 +104,7 @@ const menuGroups = computed(() => {
                 name: 'Mi Área',
                 items: [
                     { name: 'Dashboard', route: 'dashboard', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
+                    { name: 'Comprar Membresía', route: 'membresias.catalogo', icon: 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z' },
                     { name: 'Mi Progreso', route: 'rutinas.mi-progreso', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z' },
                     { name: 'Mi Suscripción', route: 'suscripciones.index', icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' },
                 ]
@@ -156,8 +157,8 @@ const handleSearch = () => {
                     <div class="flex items-center gap-8">
                         <!-- LOGO -->
                         <Link :href="route('dashboard')" class="flex items-center gap-3">
-                        <img src="/img/image.png" alt="MAROMBA Training Center" class="h-10 w-auto" />
-                        <span class="text-xl font-bold text-gray-900 dark:text-white hidden sm:block">MAROMBA</span>
+                            <img src="/img/image.png" alt="MAROMBA Training Center" class="h-10 w-auto" />
+                            <span class="text-xl font-bold text-gray-900 dark:text-white hidden sm:block">MAROMBA</span>
                         </Link>
 
                         <!-- DESKTOP NAV LINKS - Agrupados -->
@@ -177,11 +178,11 @@ const handleSearch = () => {
                                     <template #content>
                                         <Link v-for="item in group.items" :key="item.route" :href="route(item.route)"
                                             class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-lime-50 dark:hover:bg-slate-700 hover:text-lime-700 dark:hover:text-lime-400 transition">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                :d="item.icon" />
-                                        </svg>
-                                        {{ item.name }}
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    :d="item.icon" />
+                                            </svg>
+                                            {{ item.name }}
                                         </Link>
                                     </template>
                                 </Dropdown>
@@ -210,19 +211,19 @@ const handleSearch = () => {
                                 <div v-for="(result, index) in searchResults" :key="index">
                                     <Link :href="result.url"
                                         class="group cursor-pointer select-none relative py-3 pl-4 pr-4 hover:bg-lime-50 dark:hover:bg-slate-700 block transition border-b border-gray-50 dark:border-slate-700/50 last:border-0">
-                                    <div class="flex items-center justify-between">
-                                        <span
-                                            class="block truncate font-semibold text-gray-900 dark:text-gray-100 group-hover:text-lime-700 dark:group-hover:text-lime-400">
-                                            {{ result.title }}
-                                        </span>
-                                        <span
-                                            class="text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-slate-900 px-2 py-0.5 rounded-full border border-gray-200 dark:border-slate-600">
-                                            {{ result.type }}
-                                        </span>
-                                    </div>
-                                    <div class="mt-1 text-xs text-gray-500 dark:text-gray-400 truncate">
-                                        {{ result.subtitle }}
-                                    </div>
+                                        <div class="flex items-center justify-between">
+                                            <span
+                                                class="block truncate font-semibold text-gray-900 dark:text-gray-100 group-hover:text-lime-700 dark:group-hover:text-lime-400">
+                                                {{ result.title }}
+                                            </span>
+                                            <span
+                                                class="text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-slate-900 px-2 py-0.5 rounded-full border border-gray-200 dark:border-slate-600">
+                                                {{ result.type }}
+                                            </span>
+                                        </div>
+                                        <div class="mt-1 text-xs text-gray-500 dark:text-gray-400 truncate">
+                                            {{ result.subtitle }}
+                                        </div>
                                     </Link>
                                 </div>
                             </div>
@@ -260,7 +261,7 @@ const handleSearch = () => {
                                     </div>
                                     <div class="text-left hidden lg:block">
                                         <div class="text-sm font-medium text-gray-700 dark:text-gray-200">{{ displayName
-                                            }}</div>
+                                        }}</div>
                                     </div>
                                     <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" fill="none"
                                         stroke="currentColor" viewBox="0 0 24 24">
@@ -325,10 +326,11 @@ const handleSearch = () => {
                             </div>
                             <Link v-for="item in group.items" :key="item.route" :href="route(item.route)"
                                 class="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="item.icon" />
-                            </svg>
-                            {{ item.name }}
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        :d="item.icon" />
+                                </svg>
+                                {{ item.name }}
                             </Link>
                         </div>
                     </template>
@@ -348,11 +350,11 @@ const handleSearch = () => {
                     </div>
                     <Link :href="route('profile.edit')"
                         class="block px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors">
-                    Perfil
+                        Perfil
                     </Link>
                     <Link :href="route('logout')" method="post" as="button"
                         class="block w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors">
-                    Cerrar sesión
+                        Cerrar sesión
                     </Link>
                 </div>
             </div>

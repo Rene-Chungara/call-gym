@@ -24,6 +24,7 @@ use App\Http\Controllers\RutinaSesionController;
 use App\Http\Controllers\StripeController;
 use App\Http\Controllers\StripeWebhookController;
 use App\Http\Controllers\GlobalSearchController;
+use App\Http\Controllers\MembresiaClienteController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -48,6 +49,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Rutas de Reportes (Solo Propietario)
     Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes.index');
     Route::get('/reportes/exportar-pdf', [ReporteController::class, 'exportarPDF'])->name('reportes.exportar-pdf');
+
+    // CATÁLOGO Y COMPRA DE MEMBRESÍAS PARA CLIENTES (antes de Route::resource)
+    Route::get('/membresias/catalogo', [MembresiaClienteController::class, 'index'])->name('membresias.catalogo');
+    Route::get('/membresias/{membresia}/checkout', [MembresiaClienteController::class, 'checkout'])->name('membresias.checkout');
+    Route::post('/membresias/comprar', [MembresiaClienteController::class, 'procesarCompra'])->name('membresias.comprar');
 
     // Rutas para PROPIETARIO (acceso completo)
     Route::resource('usuarios', UsuarioController::class);

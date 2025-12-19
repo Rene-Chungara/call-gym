@@ -386,6 +386,15 @@ const chartOptions = {
 
                         <!-- Cliente -->
                         <template v-else-if="user.is_clientes">
+                            <a :href="route('membresias.catalogo')"
+                                class="flex items-center gap-3 p-4 bg-gradient-to-r from-slate-700 to-slate-900 dark:from-slate-800 dark:to-slate-950 text-white rounded-lg hover:from-slate-800 hover:to-slate-950 dark:hover:from-slate-900 dark:hover:to-black transition shadow-lg hover:shadow-xl">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                                </svg>
+                                <span class="font-semibold">Comprar Membresía</span>
+                            </a>
+
                             <a :href="route('rutinas.mi-progreso')"
                                 class="flex items-center gap-3 p-4 bg-gray-50 dark:bg-slate-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition border border-gray-200 dark:border-slate-600">
                                 <svg class="w-6 h-6 text-slate-600 dark:text-slate-400" fill="none"

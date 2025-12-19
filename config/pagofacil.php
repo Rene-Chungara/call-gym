@@ -19,9 +19,9 @@ return [
     'commerce_id' => env('PAGOFACIL_COMMERCE_ID'),
 
     // URLs de callback y retorno
-    'callback_url' => env('PAGOFACIL_CALLBACK_URL', env('APP_URL', 'https://ffac33a097a2.ngrok-free.app') . '/pagos/pagofacil/callback'),
+    'callback_url' => env('PAGOFACIL_CALLBACK_URL', env('APP_URL', 'https://f1177c3d003c.ngrok-free.app') . '/pagos/pagofacil/callback'),
 
-    'return_url' => env('PAGOFACIL_RETURN_URL', env('APP_URL', 'https://ffac33a097a2.ngrok-free.app') . '/pagos/pagofacil/return'),
+    'return_url' => env('PAGOFACIL_RETURN_URL', env('APP_URL', 'https://f1177c3d003c.ngrok-free.app') . '/pagos/pagofacil/return'),
 
     // Configuraciones adicionales
     'timeout' => env('PAGOFACIL_TIMEOUT', 60),
