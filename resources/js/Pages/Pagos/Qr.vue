@@ -23,7 +23,7 @@ const verificarEstado = async () => {
     contadorVerificacion.value++;
 
     try {
-        const response = await axios.post('/pagos/pagofacil/consultar', {
+        const response = await axios.post(route('pagos.pagofacil.consultar'), {
             transactionId: props.transactionId,
             pagoId: props.pagoId,
             suscripcionId: props.suscripcionId
@@ -174,11 +174,11 @@ onUnmounted(() => {
                             <div class="text-center pt-4 border-t border-gray-200 dark:border-gray-700">
                                 <Link :href="route('suscripciones.show', suscripcionId)"
                                     class="inline-flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                                </svg>
-                                Volver a la suscripción
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                                    </svg>
+                                    Volver a la suscripción
                                 </Link>
                             </div>
                         </div>

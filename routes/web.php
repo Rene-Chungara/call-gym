@@ -102,12 +102,13 @@ Route::post('/cuotas-pago/pagofacil/callback', [CuotaPagoController::class, 'cal
     ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class]);
 
 // PagoFácil - Consultas (requieren autenticación pero NO Inertia)
+// Aceptamos GET y POST para evitar problemas con redirecciones
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::post('/pagos/pagofacil/consultar', [PagoController::class, 'consultarEstadoPagoFacil'])
+    Route::match(['get', 'post'], '/pagos/pagofacil/consultar', [PagoController::class, 'consultarEstadoPagoFacil'])
         ->name('pagos.pagofacil.consultar')
         ->withoutMiddleware([\App\Http\Middleware\HandleInertiaRequests::class]);
 
-    Route::post('/cuotas-pago/pagofacil/consultar', [CuotaPagoController::class, 'consultarEstadoPagoFacil'])
+    Route::match(['get', 'post'], '/cuotas-pago/pagofacil/consultar', [CuotaPagoController::class, 'consultarEstadoPagoFacil'])
         ->name('cuotas-pago.pagofacil.consultar')
         ->withoutMiddleware([\App\Http\Middleware\HandleInertiaRequests::class]);
 });

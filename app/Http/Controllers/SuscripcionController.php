@@ -110,7 +110,7 @@ class SuscripcionController extends Controller
                     'monto_abonado' => 0,
                     'monto_total_membresia' => $membresia->precio,
                     'fecha_abono' => now()->toDateString(),
-                    'metodo_pago' => null,
+                    'metodo_pago' => 'pendiente', // Cambiar de null a 'pendiente'
                     'estado_pago' => false,
                     'observaciones' => 'Pago pendiente',
                 ]);

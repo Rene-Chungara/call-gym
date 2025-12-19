@@ -405,7 +405,17 @@ class CuotaPagoController extends Controller
             Log::info('Consulta Manual PagoFacil (Cuota)', ['data' => $statusData]);
 
             $cuota = CuotaPago::find($request->cuotaId);
+
+            // Si ya está pagado, devolver respuesta apropiada
             if ($cuota->estado === 'pagado') {
+                if ($request->expectsJson() || $request->ajax()) {
+                    return response()->json([
+                        'success' => true,
+                        'paid' => true,
+                        'redirect' => route('suscripciones.show', $request->suscripcionId),
+                        'message' => 'Pago confirmado.'
+                    ]);
+                }
                 return redirect()->route('suscripciones.show', $request->suscripcionId)->with('success', 'Pago confirmado.');
             }
 
@@ -448,8 +458,27 @@ class CuotaPagoController extends Controller
                         'payment_status' => $paymentStatus
                     ]);
 
+                    // Devolver respuesta JSON para peticiones AJAX
+                    if ($request->expectsJson() || $request->ajax()) {
+                        return response()->json([
+                            'success' => true,
+                            'paid' => true,
+                            'redirect' => route('suscripciones.show', $request->suscripcionId),
+                            'message' => 'Pago confirmado exitosamente.'
+                        ]);
+                    }
+
                     return redirect()->route('suscripciones.show', $request->suscripcionId)->with('success', 'Pago confirmado exitosamente.');
                 }
+            }
+
+            // Pago aún no confirmado - devolver respuesta apropiada
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'paid' => false,
+                    'message' => 'Pago aún no confirmado.'
+                ]);
             }
 
             // Mantener en la página actual sin hacer nada
@@ -457,6 +486,16 @@ class CuotaPagoController extends Controller
 
         } catch (\Exception $e) {
             Log::error('Error consultando estado (Cuota)', ['error' => $e->getMessage()]);
+
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'paid' => false,
+                    'message' => 'Error al consultar estado del pago.',
+                    'error' => $e->getMessage()
+                ], 500);
+            }
+
             return Inertia::location(url()->current());
         }
     }
